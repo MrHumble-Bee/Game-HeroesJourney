@@ -47,6 +47,24 @@ public abstract class Unit : MonoBehaviour
         currentDefense = maxDefense;
         currentSpeed = maxSpeed;
     }
+
+    protected virtual void Update()
+    {
+        // Example: Check if the unit's hit points have dropped to zero or lower
+        if (currentHitPoints <= 0)
+        {
+            DestroyUnit();
+        }
+    }
+
+    protected virtual void DestroyUnit()
+    {
+        // Implement any logic you want before destroying the unit
+        Debug.Log($"{gameObject.name} has been destroyed!");
+
+        // Destroy the GameObject
+        Destroy(gameObject);
+    }
 }
 
 public class Monster : Unit
@@ -54,6 +72,7 @@ public class Monster : Unit
     private Rigidbody rb;
     private Transform player;  // Reference to the player's transform
     private Animator animator;
+
 
     void Start()
     {
@@ -93,6 +112,7 @@ public class Monster : Unit
             {
                 // Set IsAttacking to true to trigger the attack animation
                 animator.SetBool("IsAttacking", true);
+                NormalAttack(player.GetComponent<Unit>());
             }
         }
         else
