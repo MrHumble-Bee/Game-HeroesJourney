@@ -3,12 +3,18 @@ using UnityEngine;
 public class Assassin : Hero
 {
     public Animator animator;
-    private AudioSource audioSource;
+    public AudioSource audioSource;
+    public AudioSource swordSwingSource;
     // public bool is_moving;
     public Rigidbody rb;
 
-    void Start()
+    public int attackRadius = 3;
+
+    private bool isClimbing = false;
+
+    protected override void Start()
     {
+        base.Start();
         // Assuming you have an Animator component attached to the GameObject
         rb = GetComponent<Rigidbody>();
         rb.constraints = RigidbodyConstraints.None; // Adjust as needed
@@ -19,25 +25,52 @@ public class Assassin : Hero
         
         // Set the animation to loop
         animator.SetBool("IsRunning", false);
-        animator.SetBool("IsJumping", false);
 
+    }
+
+    protected override void Update()
+    {
+        base.Update();
+
+        if (Input.GetKey(KeyCode.C) && isClimbing)
+        {
+            Debug.Log("C and climbing");
+            // Move the character up on the y-axis
+            float verticalInput = Input.GetAxis("Vertical");
+            Vector3 climbDirection = new Vector3(0f, currentSpeed, 0f).normalized;
+            Vector3 climbVelocity = climbDirection * currentSpeed / 2 * Time.deltaTime;
+            transform.Translate(climbVelocity);
+            animator.SetBool("IsClimbing", true);
+
+            // Add any additional climbing logic here, such as playing climbing animation
+        }
+
+
+        if (Input.GetKeyDown(KeyCode.X) && isJumping == false)
+        {
+            isJumping = true;
+            Debug.Log("Jumping");
+            animator.SetTrigger("PerformJump");
+            // Add a vertical force to simulate jumping
+            rb.AddForce(Vector3.up * currentSpeed * 65);
+        }
+
+        // Handle attack
+        HandleAttack();
     }
 
 
     void FixedUpdate()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            Debug.Log("Jumping");
-            animator.SetBool("IsJumping", true);
-            // Add a vertical force to simulate jumping
-            rb.AddForce(Vector3.up * currentSpeed * 100);
-        }
         // Handle movement
         HandleMovement();
 
-        // Handle attack
-        HandleAttack();
+    }
+    void HandleClimbing()
+    {
+        // Implement climbing logic here
+        Debug.Log("Climbing!");
+        // Add code to move the player up the ladder, play climbing animation, etc.
     }
 
     void HandleMovement()
@@ -73,7 +106,6 @@ public class Assassin : Hero
         {
             // Set the running animation parameter to false when there's no movement
             animator.SetBool("IsRunning", false);
-            // animator.SetBool("IsJumping", false);
 
             PlayRunningSound(false);
         }
@@ -86,18 +118,37 @@ public class Assassin : Hero
         // Check if the collider is tagged as "Ground"
         if (collision.collider.CompareTag("ground"))
         {
-            // Set the "IsJumping" parameter to false in the Animator
-            animator.SetBool("IsJumping", false);
+            // Can jump logic
+            isJumping = false;
         }
     }
 
     void HandleAttack()
     {
         // Check for attack input (space key)
-        if (Input.GetKeyDown(KeyCode.Z))
+        if (Input.GetKeyDown(KeyCode.Z) && isAttacking == false)
         {
             // Perform the attack
-            PerformAttack();
+            isAttacking = true;
+            animator.SetTrigger("PerformAttack");
+            PlaySwordSwingSound();
+
+            Collider[] hitColliders = Physics.OverlapSphere(transform.position, attackRadius);
+            foreach (Collider col in hitColliders)
+            {
+                if (col.CompareTag("monster"))
+                {
+                    // Perform NormalAttack on the nearest 'monster'
+                    NormalAttack(col.GetComponent<Unit>());
+                    if (col.GetComponent<Unit>().currentHitPoints <= 0)
+                    {
+                        experiance = experiance + (col.GetComponent<Unit>().level * 10);
+                    }
+                }
+            }
+
+            Invoke("ResetAttack", 0.5f);
+
         }
         if (Input.GetKeyDown(KeyCode.L)) 
         {
@@ -106,11 +157,7 @@ public class Assassin : Hero
         }
     }
 
-    void PerformAttack()
-    {
-        // Log the attack as a print statement
-        Debug.Log("Assassin performed an attack!");
-    }
+
 
     public override void AttackPointScaling()
     {
@@ -126,7 +173,7 @@ public class Assassin : Hero
     }
     public override void SpeedScaling()
     {
-        maxSpeed = baseSpeed * level;
+        maxSpeed = baseSpeed;
     }
 
     public void PlayRunningSound(bool shouldPlay)
@@ -147,6 +194,44 @@ public class Assassin : Hero
                 // Stop the sound if it's playing and should not be playing
                 audioSource.Stop();
             }
+        }
+    }
+
+    public void PlaySwordSwingSound()
+    {
+        swordSwingSource.Play();
+    }
+
+    private void ResetAttack()
+    {
+        isAttacking = false;
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        // Check if the player is in contact with a climbable object
+        if (other.CompareTag("climbable"))
+        {
+            Debug.Log("climbing");
+            isClimbing = true;
+
+            // Disable gravity while climbing
+            Rigidbody rb = GetComponent<Rigidbody>();
+            rb.useGravity = false;
+        }
+    }
+
+    void OnTriggerExit(Collider other)
+    {
+        // Check if the player is no longer in contact with a climbable object
+        if (other.CompareTag("climbable"))
+        {
+            Debug.Log("unclimbing");
+            isClimbing = false;
+            animator.SetBool("IsClimbing", false);
+            // Re-enable gravity when not climbing
+            Rigidbody rb = GetComponent<Rigidbody>();
+            rb.useGravity = true;
         }
     }
 }

@@ -353,10 +353,15 @@
 "Assets/Mini Simple Characters Skeleton Demo/Readme/Scripts/Readme.cs"
 "Assets/scripts/assassin.cs"
 "Assets/scripts/camera_movement.cs"
+"Assets/scripts/DataStuctures/Heap.cs"
 "Assets/scripts/equipment.cs"
+"Assets/scripts/MapGenerator.cs"
 "Assets/scripts/stumps.cs"
+"Assets/scripts/test.cs"
 "Assets/scripts/tribe_leaders.cs"
 "Assets/scripts/units.cs"
+"Assets/UI/HealthBar/BillBoard.cs"
+"Assets/UI/HealthBar/HealthBar.cs"
 -langversion:9.0
 
 /deterministic

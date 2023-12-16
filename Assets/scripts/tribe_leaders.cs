@@ -8,6 +8,7 @@ public class TribeLeaders : Unit
     // Start is called before the first frame update
     void Start()
     {
+        RecoverAllStats();
         rb = GetComponent<Rigidbody>();
         rb.constraints = RigidbodyConstraints.None; // Adjust as needed
         rb.freezeRotation = true;
@@ -16,11 +17,6 @@ public class TribeLeaders : Unit
 
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
     public override void AttackPointScaling()
     {
         maxAttackPoints = baseAttackPoints * level;
