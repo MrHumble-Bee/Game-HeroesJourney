@@ -26,6 +26,10 @@ public abstract class Unit : MonoBehaviour
     public bool isJumping;
 
     // public HealthBar healthBar;
+    public GameObject helmet;
+    public GameObject weapon;
+    public GameObject bodyarmor;
+    public GameObject boots;
 
     public abstract void HitPointScaling();
     public abstract void AttackPointScaling();
@@ -222,10 +226,22 @@ public class Monster : Unit
 public class Hero : Unit
 {
     public Equipment[] equippedItems = new Equipment[4];
+    private bool isEquipped = false;
 
-    public void EquipItem(Equipment item)
+    public void EquipItem(GameObject item)
     {
-        // Implement equip logic for heroes
+        if (isEquipped)
+        {
+        }
+        else
+        {
+            // Implement equip logic for heroes
+            GameObject weapon1 = Instantiate(item, weapon.transform.position, Quaternion.identity);
+            // weapon1.parent = weapon;
+            weapon1.transform.SetParent(weapon.transform);
+            weapon1.transform.rotation = weapon.transform.rotation;
+            isEquipped = true;
+        }
     }
 
     public void UnequipItem(string category)

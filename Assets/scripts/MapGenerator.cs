@@ -97,16 +97,16 @@ public class MapGenerator : MonoBehaviour
                 uniqueNumbers.Add(randomNumber * tileWidthHeight);
                 switch (dir){
                     case 'n':
-                        randomEntranceCoordinates.Add((randomNumber, 0, 0));
+                        randomEntranceCoordinates.Add((randomNumber * tileWidthHeight, 0, 0));
                         break;
                     case 'e':
-                        randomEntranceCoordinates.Add((0, 0, randomNumber));
+                        randomEntranceCoordinates.Add((0, 0, randomNumber * tileWidthHeight));
                         break;
                     case 's':
-                        randomEntranceCoordinates.Add((randomNumber, 0, (mapHeight - 1) * tileWidthHeight));
+                        randomEntranceCoordinates.Add((randomNumber * tileWidthHeight, 0, (mapHeight - 1) * tileWidthHeight));
                         break;
                     default:
-                        randomEntranceCoordinates.Add(((mapWidth - 1) * tileWidthHeight, 0, randomNumber));
+                        randomEntranceCoordinates.Add(((mapWidth - 1) * tileWidthHeight, 0, randomNumber * tileWidthHeight));
                         break;
                 }
             }
@@ -164,148 +164,211 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
-    void GenerateTerrain()
+    private HashSet<(int,int,int)> GetTerrainSet()
     {
-        // 
+        HashSet<(int,int,int)> plainGroundCoordinates = new HashSet<(int,int,int)>();
+        for (int x = tileWidthHeight; x < (mapWidth-1)*tileWidthHeight; x = x + tileWidthHeight)
+        {
+            for (int z = tileWidthHeight; z < (mapHeight-1)*tileWidthHeight; z = z + tileWidthHeight)
+            {
+                plainGroundCoordinates.Add((x,0,z));
+            }
+        }
+        return plainGroundCoordinates;
     }
 
     void GeneratePath()
     {
         HashSet<(int,int,int)> coords = GetPathSet();
+        HashSet<(int,int,int)> plainGroundCoordinates = GetTerrainSet();
         foreach ((int,int,int) coord in coords)
         {
-            GameObject path = Instantiate(tilePrefabs[3], new Vector3(coord.Item1, coord.Item2, coord.Item3), Quaternion.identity);
+            GameObject path = Instantiate(tilePrefabs[7], new Vector3(coord.Item1, coord.Item2, coord.Item3), Quaternion.identity);
             path.transform.parent = this.transform;
-            Debug.Log($"{coord.Item1},{coord.Item2},{coord.Item3}");
+            plainGroundCoordinates.Remove(coord);
+        }
+        foreach(var coord in plainGroundCoordinates)
+        {
+            GameObject path = Instantiate(tilePrefabs[6], new Vector3(coord.Item1, coord.Item2, coord.Item3), Quaternion.identity);
+            path.transform.parent = this.transform;
         }
     }
 
     private HashSet<(int,int,int)> GetPathSet()
     {
-        // Pick a arb starting point
-        HashSet<(int, int, int)> visited = new HashSet<(int,int,int)>();
-        HashSet<(int,int,int)> targetCoords = new HashSet<(int,int,int)>();
-        Dictionary<(int,int,int), (int,int,int)> previousNode = new Dictionary<(int,int,int), (int,int,int)>();
-        Dictionary<(int,int,int), double> costs = new Dictionary<(int,int,int), double>();
-        BinaryHeap<WeightedCoordinate> heapq;
+        (int,int,int) startCoordinate = (0,0,0);
+        HashSet<(int,int,int)> endCoordinates = new HashSet<(int,int,int)>();
+        HashSet<(int,int,int)> traveled = new HashSet<(int,int,int)>();
 
-        WeightedCoordinate startingCoord = new WeightedCoordinate(0.0, 0,0,0);
-        WeightedCoordinate currentCoord;
-
-        WeightedCoordinate targetCoord = new WeightedCoordinate(double.PositiveInfinity, 0,0,0);
-
-        bool is_starting_coord = true;
-
-        foreach ((int x, int y, int z) in randomEntranceCoordinates)
+        bool is_first = true;
+        foreach ((int,int,int) coordinate in randomEntranceCoordinates)
         {
-            if (is_starting_coord) {
-                startingCoord = new WeightedCoordinate(0.0, x, y, z);
-                costs.Add((startingCoord.X, startingCoord.Y, startingCoord.Z), 0.0);
-                is_starting_coord = false;
-                continue;
+            if (is_first) {
+                startCoordinate = coordinate;
+                is_first = false;
+                traveled.Add(coordinate);
             }
-            targetCoords.Add((x,y,z));
-            heapq = new BinaryHeap<WeightedCoordinate>();
-            heapq.Add(startingCoord);
+            else {
+                endCoordinates.Add(coordinate);
+                traveled.Add(coordinate);
+            }
+        }
 
-            while (heapq.IsEmpty() == false)
+        // HashSet<(int,int,int)> temp = new HashSet<(int,int,int)>();
+        // foreach(var endCoordinate in endCoordinates)
+        // {
+        //     Debug.Log($"End Coord {endCoordinate.Item1}, {endCoordinate.Item2}, {endCoordinate.Item3}");
+        //     List<(int,int,int)> neighborOffsets = new List<(int,int,int)> {(-2,0,0), (2,0,0), (0,0,2), (0,0,-2)};
+        //     foreach ((int,int,int) neighborOffset in neighborOffsets)
+        //     {
+        //         Debug.Log($"Trying {neighborOffset.Item1}, {neighborOffset.Item2}, {neighborOffset.Item3}");
+        //         // alligning new
+        //         (int,int,int) neighborCoordinate = (endCoordinate.Item1 + neighborOffset.Item1, 
+        //                                             endCoordinate.Item2 + neighborOffset.Item2, 
+        //                                             endCoordinate.Item3 + neighborOffset.Item3);
+        //         // Check within bounds
+        //         if (neighborCoordinate.Item1 < tileWidthHeight ||
+        //             neighborCoordinate.Item1 > (mapWidth-1) * tileWidthHeight ||
+        //             neighborCoordinate.Item3 < tileWidthHeight ||
+        //             neighborCoordinate.Item3 > (mapHeight-1) * tileWidthHeight)
+        //         {
+        //             continue;
+        //         }
+        //         temp.Add(neighborCoordinate);
+        //         Debug.Log($"Adding {neighborCoordinate.Item1}, {neighborCoordinate.Item2}, {neighborCoordinate.Item3}");
+        //     }
+        // }
+        // return temp;
+
+        Dictionary<(int,int,int),(int,int,int)> previousNode = new Dictionary<(int,int,int), (int,int,int)>();
+        foreach ((int,int,int) endCoordinate in endCoordinates) 
+        {
+            // Fixing target
+            (int,int,int) coordinate = (0,0,0);
+            if (endCoordinate.Item1 == 0) { coordinate = (endCoordinate.Item1 + tileWidthHeight, endCoordinate.Item2, endCoordinate.Item3);}
+            else if (endCoordinate.Item3 == 0) { coordinate = (endCoordinate.Item1, endCoordinate.Item2, endCoordinate.Item3 + tileWidthHeight);}
+            else if (endCoordinate.Item1 == (mapWidth-1)*tileWidthHeight) { coordinate = (endCoordinate.Item1 - tileWidthHeight, endCoordinate.Item2, endCoordinate.Item3);}
+            else if (endCoordinate.Item3 == (mapHeight-1)*tileWidthHeight) { coordinate = (endCoordinate.Item1, endCoordinate.Item2, endCoordinate.Item3 - tileWidthHeight);}
+            previousNode.Add(endCoordinate, coordinate);
+
+
+            Debug.Log($"End Coordinate {coordinate.Item1}, {coordinate.Item2}, {coordinate.Item3}");
+            // Run djikstra
+            BinaryHeap<WeightedCoordinate> heap = new BinaryHeap<WeightedCoordinate>();
+            HashSet<(int,int,int)> visited = new HashSet<(int,int,int)>();
+            Dictionary<(int,int,int), double> distances = new Dictionary<(int,int,int), double>();
+
+            WeightedCoordinate startNode = new WeightedCoordinate(0.0, startCoordinate);
+            heap.Add(startNode);
+            int COUNT = 0;
+            while (heap.IsEmpty() == false)
             {
-                currentCoord = heapq.Remove();
-                if (visited.Contains((currentCoord.X, currentCoord.Y, currentCoord.Z)))
-                {
-                    continue;
-                }
-                visited.Add((currentCoord.X, currentCoord.Y, currentCoord.Z));
-
-                // Currently visiting target Node
-                if ((currentCoord.X, currentCoord.Y, currentCoord.Z) == (x,y,z))
-                {
+                WeightedCoordinate currentNode = heap.Remove();
+                // Already visited
+                if (visited.Contains(currentNode.Coordinate)) {continue;}
+                COUNT++;
+                // Debug.Log($"At {currentNode.Coordinate.Item1}, {currentNode.Coordinate.Item2}, {currentNode.Coordinate.Item3}");
+                // Target Found
+                if (currentNode.Coordinate == coordinate) {
+                    Debug.Log($"At {currentNode.Coordinate.Item1}, {currentNode.Coordinate.Item2}, {currentNode.Coordinate.Item3}");
                     break;
-                }
+                    }
+                visited.Add(currentNode.Coordinate);
+                traveled.Add(currentNode.Coordinate);
 
-
-
-                List<(int,int,int)> neighbors = new List<(int,int,int)> {(2,0,0), (-2,0,0), (0,0,2), (0,0,-2)};
-                foreach ((int,int,int) neigbor in neighbors)
+                // Neighbors
+                List<(int,int,int)> neighborOffsets = new List<(int,int,int)> {(-2,0,0), (2,0,0), (0,0,2), (0,0,-2)};
+                foreach ((int,int,int) neighborOffset in neighborOffsets)
                 {
-                    (int,int,int) neighborCoord = (currentCoord.X + neigbor.Item1, currentCoord.Y + neigbor.Item2, currentCoord.Z + neigbor.Item3);
-                    
-                    // Out of Bounds neighbors
-                    if (neighborCoord.Item1 < 2 || 
-                        neighborCoord.Item1 > (mapWidth-1) * (tileWidthHeight) ||
-                        neighborCoord.Item3 < 2 || 
-                        neighborCoord.Item3 > (mapHeight-1) * tileWidthHeight)
+                    // alligning new
+                    (int,int,int) neighborCoordinate = (currentNode.Coordinate.Item1 + neighborOffset.Item1, 
+                                                        currentNode.Coordinate.Item2 + neighborOffset.Item2, 
+                                                        currentNode.Coordinate.Item3 + neighborOffset.Item3);
+                    // Check within bounds
+                    if (neighborCoordinate.Item1 < 2 ||
+                        neighborCoordinate.Item1 > (mapWidth-2) * tileWidthHeight ||
+                        neighborCoordinate.Item3 < 2 ||
+                        neighborCoordinate.Item3 > (mapHeight-2) * tileWidthHeight)
                     {
                         continue;
                     }
 
-                    // Update weights
-                    double currentEdgeCost = visited.Contains(neighborCoord) ? 0 : 2;
-                    if (costs.ContainsKey(neighborCoord))
+                    // Check not visited
+                    if (visited.Contains(neighborCoordinate)) {continue;}
+
+
+                    // Update distance
+                    double edgeCost = 0;
+                    if (traveled.Contains(neighborCoordinate)){
+                        edgeCost = 0;
+                        currentNode.Weight = 0;
+                    }
+                    else {
+                        edgeCost = (traveled.Contains(neighborCoordinate)) ? 0 : 2;
+                    }
+                    if (distances.ContainsKey(neighborCoordinate)) 
                     {
-                        if (costs[neighborCoord] > currentCoord.Weight + currentEdgeCost)
+                        if (distances[neighborCoordinate] > currentNode.Weight + edgeCost)
                         {
-                            costs[neighborCoord] = currentCoord.Weight + currentEdgeCost;
-                            previousNode[neighborCoord] = (currentCoord.X, currentCoord.Y, currentCoord.Z);
+                            distances[neighborCoordinate] = currentNode.Weight + edgeCost;
+                            previousNode[neighborCoordinate] = currentNode.Coordinate;
                         }
                     }
                     else
                     {
-                        costs.Add(neighborCoord, currentCoord.Weight + currentEdgeCost);
-                        previousNode.Add(neighborCoord, (currentCoord.X, currentCoord.Y, currentCoord.Z));
+                        distances.Add(neighborCoordinate, currentNode.Weight + edgeCost);
+                        if (previousNode.ContainsKey(neighborCoordinate)){
+                            previousNode[neighborCoordinate] = currentNode.Coordinate;
+                        }
+                        else{
+                            previousNode.Add(neighborCoordinate, currentNode.Coordinate);
+                        }
                     }
 
-                    // Adding neighbors to heap
-                    if (visited.Contains(neighborCoord) == false)
-                    {
-                        WeightedCoordinate neighborNode = new WeightedCoordinate(costs[neighborCoord], neighborCoord.Item1, neighborCoord.Item2, neighborCoord.Item3);
-                        heapq.Add(neighborNode);
-                    }
-
+                    // Add neighbor to heap
+                    WeightedCoordinate neighborNode = new WeightedCoordinate(distances[neighborCoordinate], neighborCoordinate);
+                    heap.Add(neighborNode);
                 }
-
-
             }
-            // Debug.Log(previousNode.ToString());
-            foreach (KeyValuePair<(int,int,int),(int,int,int)> entry in previousNode)
-            {
-                Debug.Log($"{entry.Key}, {entry.Value}");
-            }
+            // Debug.Log($"Count: {COUNT}");
+            // Debug.Log($"{distances[coordinate]}");
+            // Debug.Log($"{previousNode[coordinate]}");
+
 
         }
-
-        // return paths using set of coords
-        HashSet<(int,int,int)> pathCoords = new HashSet<(int,int,int)>();
-        foreach ((int,int,int) coord in targetCoords)
+        // Debug.Log($"{COUNT}");
+        HashSet<(int,int,int)> pathTileCoordinates = new HashSet<(int,int,int)>();
+        (int,int,int) currentCoordinate;
+        foreach ((int,int,int) endCoordinate in endCoordinates)
         {
-            pathCoords.Add(coord);
-            (int,int,int) currCoord = coord;
-            while (previousNode.ContainsKey(currCoord))
+            currentCoordinate = endCoordinate;
+            pathTileCoordinates.Add(currentCoordinate);
+
+            Debug.Log($"Adding {currentCoordinate.Item1}, {currentCoordinate.Item2}, {currentCoordinate.Item3}");
+            while (previousNode.ContainsKey(currentCoordinate))
             {
-                pathCoords.Add(previousNode[currCoord]);
-                currCoord = previousNode[currCoord];
+                currentCoordinate = previousNode[currentCoordinate];
+                pathTileCoordinates.Add(currentCoordinate);
+                Debug.Log($"Adding {currentCoordinate.Item1}, {currentCoordinate.Item2}, {currentCoordinate.Item3}");
             }
         }
-
-        return pathCoords;
+        return pathTileCoordinates;
     }
+
+
 }
 
 
 
 public class WeightedCoordinate : IComparable<WeightedCoordinate>
 {
-    public double Weight { get; }
-    public int X { get; }
-    public int Y { get; }
-    public int Z { get; }
+    public double Weight { get; set;}
+    public (int,int,int) Coordinate { get; }
 
-    public WeightedCoordinate(double weight, int x, int y, int z)
+    public WeightedCoordinate(double weight, (int,int,int) coordinate)
     {
         Weight = weight;
-        X = x;
-        Y = y;
-        Z = z;
+        Coordinate = coordinate;
     }
 
     // Implement the IComparable<WeightedCoordinate> interface
@@ -318,6 +381,6 @@ public class WeightedCoordinate : IComparable<WeightedCoordinate>
     // Optionally override ToString for better readability
     public override string ToString()
     {
-        return $"Weight: {Weight}, X: {X}, Y: {Y}, Z: {Z}";
+        return $"Weight: {Weight}, X: {Coordinate.Item1}, Y: {Coordinate.Item2}, Z: {Coordinate.Item3}";
     }
 }

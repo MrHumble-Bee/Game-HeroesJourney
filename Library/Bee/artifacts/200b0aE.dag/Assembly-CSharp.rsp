@@ -360,6 +360,7 @@
 "Assets/scripts/test.cs"
 "Assets/scripts/tribe_leaders.cs"
 "Assets/scripts/units.cs"
+"Assets/scripts/weapons.cs"
 "Assets/UI/HealthBar/BillBoard.cs"
 "Assets/UI/HealthBar/HealthBar.cs"
 -langversion:9.0

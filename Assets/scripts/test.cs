@@ -1,148 +1,123 @@
-using System.Collections;
-using System.Collections.Generic;
-public class Djikstra
-{
-    private HashSet<(int,int,int)> GetPathSet()
-    {
-        // Pick a arb starting point
-        HashSet<(int, int, int)> visited = new HashSet<(int,int,int)>();
-        HashSet<(int,int,int)> targetCoords = new HashSet<(int,int,int)>();
-        Dictionary<(int,int,int), (int,int,int)> previousNode = new Dictionary<(int,int,int), (int,int,int)>();
-        Dictionary<(int,int,int), double> costs = new Dictionary<(int,int,int), double>();
-        BinaryHeap<WeightedCoordinate> heapq;
-
-        WeightedCoordinate startingCoord = new WeightedCoordinate(0.0, 0,0,0);
-        WeightedCoordinate currentCoord;
-
-        WeightedCoordinate targetCoord = new WeightedCoordinate(double.PositiveInfinity, 0,0,0);
-
-        bool is_starting_coord = true;
-
-        foreach ((int x, int y, int z) in randomEntranceCoordinates)
-        {
-            if (is_starting_coord) {
-                startingCoord = new WeightedCoordinate(0.0, x, y, z);
-                costs.Add((startingCoord.X, startingCoord.Y, startingCoord.Z), 0.0);
-                is_starting_coord = false;
-                continue;
-            }
-            targetCoords.Add((x,y,z));
-            heapq = new BinaryHeap<WeightedCoordinate>();
-            
-            heapq.Add(startingCoord);
-
-            while (heapq.IsEmpty() == false)
-            {
-                currentCoord = heapq.Remove();
-                if (visited.Contains((currentCoord.X, currentCoord.Y, currentCoord.Z)))
-                {
-                    continue;
-                }
-                visited.Add((currentCoord.X, currentCoord.Y, currentCoord.Z));
-
-                // Currently visiting target Node
-                if ((currentCoord.X, currentCoord.Y, currentCoord.Z) == (x,y,z))
-                {
-                    break;
-                }
+// using System.Collections;
+// using System.Collections.Generic;
+// using System;
 
 
+// public class Djikstra
+// {
+//     private HashSet<(int,int,int)> GetPathSet()
+//     {
+//         (int,int,int) startCoordinate = (0,0,0);
+//         HashSet<(int,int,int)> endCoordinates = new HashSet<(int,int,int)>();
+//         HashSet<(int,int,int)> traveled = new HashSet<(int,int,int)>();
 
-                List<(int,int,int)> neighbors = new List<(int,int,int)> {(2,0,0), (-2,0,0), (0,0,2), (0,0,-2)};
-                foreach ((int,int,int) neigbor in neighbors)
-                {
-                    (int,int,int) neighborCoord = (currentCoord.X + neigbor.Item1, currentCoord.Y + neigbor.Item2, currentCoord.Z + neigbor.Item3);
-                    
-                    // Out of Bounds neighbors
-                    if (neighborCoord.Item1 < 2 || 
-                        neighborCoord.Item1 > (mapWidth-1) * (tileWidthHeight) ||
-                        neighborCoord.Item3 < 2 || 
-                        neighborCoord.Item3 > (mapHeight-1) * tileWidthHeight)
-                    {
-                        continue;
-                    }
+//         bool is_first = true;
+//         foreach ((int,int,int) coordinate in randomEntranceCoordinates)
+//         {
+//             if (is_first) {
+//                 startCoordinate = coordinate;
+//                 is_first = false;
+//                 traveled.Add(coordinate);
+//             }
+//             else {
+//                 endCoordinates.Add(coordinate);
+//                 traveled.Add(coordinate);
+//             }
+//         }
 
-                    // Update weights
-                    double currentEdgeCost = visited.Contains(neighborCoord) ? 0 : 2;
-                    if (costs.ContainsKey(neighborCoord))
-                    {
-                        if (costs[neighborCoord] > currentCoord.Weight + currentEdgeCost)
-                        {
-                            costs[neighborCoord] = currentCoord.Weight + currentEdgeCost;
-                            previousNode[neighborCoord] = (currentCoord.X, currentCoord.Y, currentCoord.Z);
-                        }
-                    }
-                    else
-                    {
-                        costs.Add(neighborCoord, currentCoord.Weight + currentEdgeCost);
-                        previousNode.Add(neighborCoord, (currentCoord.X, currentCoord.Y, currentCoord.Z));
-                    }
+//         Dictionary<(int,int,int),(int,int,int)> previousNode = new Dictionary<(int,int,int), (int,int,int)>();
+//         foreach ((int,int,int) coordinate in endCoordinates) 
+//         {
+//             // Run djikstra
+//             BinaryHeap<WeightedCoordinate> heap = new BinaryHeap<WeightedCoordinate>();
+//             HashSet<(int,int,int)> visited = new HashSet<(int,int,int)>();
+//             Dictionary<(int,int,int), double> distances = new Dictionary<(int,int,int), double>();
 
-                    // Adding neighbors to heap
-                    if (visited.Contains(neighborCoord) == false)
-                    {
-                        WeightedCoordinate neighborNode = new WeightedCoordinate(costs[neighborCoord], neighborCoord.Item1, neighborCoord.Item2, neighborCoord.Item3);
-                        heapq.Add(neighborNode);
-                    }
+//             WeightedCoordinate startNode = new WeightedCoordinate(0.0, startCoordinate);
+//             heap.Add(startNode);
 
-                }
+//             while (heap.IsEmpty() == false)
+//             {
+//                 WeightedCoordinate currentNode = heap.Remove();
+//                 // Already visited
+//                 if (visited.Contains(currentNode.Coordinate)) {continue;}
+//                 visited.Add(currentNode.Coordinate);
 
+//                 // Neighbors
+//                 List<(int,int,int)> neighborOffsets = new List<(int,int,int)> {(-2,0,0), (2,0,0), (0,0,2), (0,0,-2)};
+//                 foreach ((int,int,int) neighborOffset in neighborOffsets)
+//                 {
+//                     // alligning new
+//                     (int,int,int) neighborCoordinate = (currentNode.Coordinate.Item1 + neighborOffset.Item1, 
+//                                                         currentNode.Coordinate.Item2 + neighborOffset.Item2, 
+//                                                         currentNode.Coordinate.Item3 + neighborOffset.Item3);
 
-            }
-            // Debug.Log(previousNode.ToString());
-            foreach (KeyValuePair<(int,int,int),(int,int,int)> entry in previousNode)
-            {
-                Debug.Log($"{entry.Key}, {entry.Value}");
-            }
+//                     // Check not visited
+//                     if (visited.Contains(neighborCoordinate)) {continue;}
 
-        }
+//                     // Update distance
+//                     double edgeCost = (traveled.Contains(neighborCoordinate)) ? 0 : 2;
+//                     if (distances.ContainsKey(neighborCoordinate)) 
+//                     {
+//                         if (distances[neighborCoordinate] > currentNode.Weight + edgeCost)
+//                         {
+//                             distances[neighborCoordinate] = currentNode.Weight + edgeCost;
+//                             previousNode[neighborCoordinate] = currentNode.Coordinate;
+//                         }
+//                     }
+//                     else
+//                     {
+//                         distances.Add(neighborCoordinate, currentNode.Weight + edgeCost);
+//                         previousNode.Add(neighborCoordinate, currentNode.Coordinate);
+//                     }
 
-        // return paths using set of coords
-        HashSet<(int,int,int)> pathCoords = new HashSet<(int,int,int)>();
-        foreach ((int,int,int) coord in targetCoords)
-        {
-            pathCoords.Add(coord);
-            (int,int,int) currCoord = coord;
-            while (previousNode.ContainsKey(currCoord))
-            {
-                pathCoords.Add(previousNode[currCoord]);
-                currCoord = previousNode[currCoord];
-            }
-        }
+//                     // Add neighbor to heap
+//                     WeightedCoordinate neighborNode = new WeightedCoordinate(distances[neighborCoordinate], neighborCoordinate);
+//                     heap.Add(neighborNode);
+//                 }
+//             }            
 
-        return pathCoords;
-    }
-}
+//         }
+
+//         HashSet<(int,int,int)> pathTileCoordinates = new HashSet<(int,int,int)>();
+//         (int,int,int) currentCoordinate;
+//         foreach ((int,int,int) endCoordinate in endCoordinates)
+//         {
+//             currentCoordinate = endCoordinate;
+//             pathTileCoordinates.Add(currentCoordinate);
+//             while (previousNode.ContainsKey(currentCoordinate))
+//             {
+//                 currentCoordinate = previousNode[currentCoordinate];
+//                 pathTileCoordinates.Add(currentCoordinate);
+//             }
+//         }
+//         return pathTileCoordinates;
+//     }
+// }
 
 
 
+// public class WeightedCoordinate : IComparable<WeightedCoordinate>
+// {
+//     public double Weight { get; }
+//     public (int,int,int) Coordinate { get; }
 
-public class WeightedCoordinate : IComparable<WeightedCoordinate>
-{
-    public double Weight { get; }
-    public int X { get; }
-    public int Y { get; }
-    public int Z { get; }
+//     public WeightedCoordinate(double weight, (int,int,int) coordinate)
+//     {
+//         Weight = weight;
+//         Coordinate = coordinate;
+//     }
 
-    public WeightedCoordinate(double weight, int x, int y, int z)
-    {
-        Weight = weight;
-        X = x;
-        Y = y;
-        Z = z;
-    }
+//     // Implement the IComparable<WeightedCoordinate> interface
+//     public int CompareTo(WeightedCoordinate other)
+//     {
+//         // Compare based on weight only
+//         return Weight.CompareTo(other.Weight);
+//     }
 
-    // Implement the IComparable<WeightedCoordinate> interface
-    public int CompareTo(WeightedCoordinate other)
-    {
-        // Compare based on weight only
-        return Weight.CompareTo(other.Weight);
-    }
-
-    // Optionally override ToString for better readability
-    public override string ToString()
-    {
-        return $"Weight: {Weight}, X: {X}, Y: {Y}, Z: {Z}";
-    }
-}
-
+//     // Optionally override ToString for better readability
+//     public override string ToString()
+//     {
+//         return $"Weight: {Weight}, X: {Coordinate.Item1}, Y: {Coordinate.Item2}, Z: {Coordinate.Item3}";
+//     }
+// }

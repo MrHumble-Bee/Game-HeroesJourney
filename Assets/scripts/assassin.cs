@@ -12,6 +12,8 @@ public class Assassin : Hero
 
     private bool isClimbing = false;
 
+    public GameObject sword;
+
     protected override void Start()
     {
         base.Start();
@@ -53,6 +55,10 @@ public class Assassin : Hero
             animator.SetTrigger("PerformJump");
             // Add a vertical force to simulate jumping
             rb.AddForce(Vector3.up * currentSpeed * 65);
+        }
+        if (Input.GetKeyDown(KeyCode.E)) 
+        {
+            EquipItem(sword);
         }
 
         // Handle attack
@@ -144,6 +150,7 @@ public class Assassin : Hero
                     {
                         experiance = experiance + (col.GetComponent<Unit>().level * 10);
                     }
+                    break;
                 }
             }
 

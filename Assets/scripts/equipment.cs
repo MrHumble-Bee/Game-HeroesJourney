@@ -1,4 +1,9 @@
-public abstract class Equipment
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+
+public abstract class Equipment : MonoBehaviour
 {
     public float healthMultiplier;
     public float attackMultiplier;
