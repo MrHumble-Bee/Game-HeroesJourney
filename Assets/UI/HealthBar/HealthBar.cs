@@ -8,13 +8,13 @@ public class HealthBar : MonoBehaviour
 {
 
 	public Slider slider;
-	// public Gradient gradient;
 	public Image fill;
 	public TMP_Text levelIndicator;
-	public Unit unit;
+	private Unit unit;
 
 	void Start()
 	{
+		unit = FindParentUnit();
 		SetMaxHealth(unit.maxHitPoints);
 	}
 
@@ -40,8 +40,25 @@ public class HealthBar : MonoBehaviour
     public void SetHealth(float health)
 	{
 		slider.value = health;
-
-		// fill.color = gradient.Evaluate(slider.normalizedValue);
 	}
+
+	private Unit FindParentUnit()
+    {
+        Transform parentTransform = transform.parent;
+
+        while (parentTransform != null)
+        {
+            Unit parentUnit = parentTransform.GetComponent<Unit>();
+            if (parentUnit != null)
+            {
+                return parentUnit;
+            }
+
+            // Move up to the next parent in the hierarchy
+            parentTransform = parentTransform.parent;
+        }
+
+        return null; // If no parent Unit is found
+    }
 
 }

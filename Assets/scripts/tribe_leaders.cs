@@ -14,6 +14,7 @@ public class TribeLeaders : Unit
         rb.freezeRotation = true;
         rb.constraints = RigidbodyConstraints.FreezePositionX;
         rb.constraints = RigidbodyConstraints.FreezePositionY;
+        rb.constraints = RigidbodyConstraints.FreezePositionZ;
 
     }
 

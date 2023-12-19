@@ -32,6 +32,8 @@ public class MapGenerator : MonoBehaviour
     // 5 T Path Tile
     // 6 Grass Tile
 
+    // 7 TEMP EMPTY TILE
+
     // Start is called before the first frame update
     void Start()
     {
@@ -213,32 +215,6 @@ public class MapGenerator : MonoBehaviour
                 traveled.Add(coordinate);
             }
         }
-
-        // HashSet<(int,int,int)> temp = new HashSet<(int,int,int)>();
-        // foreach(var endCoordinate in endCoordinates)
-        // {
-        //     Debug.Log($"End Coord {endCoordinate.Item1}, {endCoordinate.Item2}, {endCoordinate.Item3}");
-        //     List<(int,int,int)> neighborOffsets = new List<(int,int,int)> {(-2,0,0), (2,0,0), (0,0,2), (0,0,-2)};
-        //     foreach ((int,int,int) neighborOffset in neighborOffsets)
-        //     {
-        //         Debug.Log($"Trying {neighborOffset.Item1}, {neighborOffset.Item2}, {neighborOffset.Item3}");
-        //         // alligning new
-        //         (int,int,int) neighborCoordinate = (endCoordinate.Item1 + neighborOffset.Item1, 
-        //                                             endCoordinate.Item2 + neighborOffset.Item2, 
-        //                                             endCoordinate.Item3 + neighborOffset.Item3);
-        //         // Check within bounds
-        //         if (neighborCoordinate.Item1 < tileWidthHeight ||
-        //             neighborCoordinate.Item1 > (mapWidth-1) * tileWidthHeight ||
-        //             neighborCoordinate.Item3 < tileWidthHeight ||
-        //             neighborCoordinate.Item3 > (mapHeight-1) * tileWidthHeight)
-        //         {
-        //             continue;
-        //         }
-        //         temp.Add(neighborCoordinate);
-        //         Debug.Log($"Adding {neighborCoordinate.Item1}, {neighborCoordinate.Item2}, {neighborCoordinate.Item3}");
-        //     }
-        // }
-        // return temp;
 
         Dictionary<(int,int,int),(int,int,int)> previousNode = new Dictionary<(int,int,int), (int,int,int)>();
         foreach ((int,int,int) endCoordinate in endCoordinates) 

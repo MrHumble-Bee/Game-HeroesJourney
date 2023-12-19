@@ -1,5 +1,4 @@
 using UnityEngine;
-
 public class Assassin : Hero
 {
     public Animator animator;
@@ -148,7 +147,7 @@ public class Assassin : Hero
                     NormalAttack(col.GetComponent<Unit>());
                     if (col.GetComponent<Unit>().currentHitPoints <= 0)
                     {
-                        experiance = experiance + (col.GetComponent<Unit>().level * 10);
+                        currentExperience = currentExperience + (col.GetComponent<Unit>().level * 10);
                     }
                     break;
                 }

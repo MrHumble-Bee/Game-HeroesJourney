@@ -181,12 +181,18 @@ MonoBehaviour:
   maxDefense: 500
   maxSpeed: 3
   level: 100
+  currentExperience: 0
+  nextLevelExperience: 0
   currentHitPoints: 2500
   currentAttackPoints: 500
   currentDefense: 500
   currentSpeed: 3
   isAttacking: 0
   isJumping: 0
+  helmet: {fileID: 0}
+  weapon: {fileID: 0}
+  bodyarmor: {fileID: 0}
+  boots: {fileID: 0}
   rb: {fileID: 3408146250465740869}
 --- !u!4 &7895739591066109597 stripped
 Transform:

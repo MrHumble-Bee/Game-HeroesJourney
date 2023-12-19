@@ -14,8 +14,10 @@ public abstract class Unit : MonoBehaviour
     public float maxSpeed;
 
     public int level = 1;
-    public double experiance = 0;
-    private double nextLevelExperience = 2.0;
+    public float currentExperience = 0;
+    private float baseExpReq = 10;
+    private float baseExpGrowth = 1.5f;
+    public float nextLevelExperience;
 
     public float currentHitPoints;
     public float currentAttackPoints;
@@ -35,24 +37,34 @@ public abstract class Unit : MonoBehaviour
     public abstract void AttackPointScaling();
     public abstract void DefenseScaling();
     public abstract void SpeedScaling();
+
+    public bool isDead = false;
     
     protected virtual void Start()
     {
-        // healthBar.SetMaxHealth(maxHitPoints);
+        nextLevelExperience = GetExperienceNeededForLevel(baseExpReq, baseExpGrowth, level);
     }
 
     protected virtual void Update()
     {
         if (currentHitPoints <= 0)
         {
-            DestroyUnit();
+            // animator.SetTrigger("Dead");
+            // isDead = true;
+            gameObject.tag = "Untagged";
+            // Invoke("DestroyUnit", 3.0f);
         }
-        if (experiance > nextLevelExperience)
+        if (currentExperience > nextLevelExperience)
         {
-            experiance = experiance % nextLevelExperience;
+            currentExperience = currentExperience % nextLevelExperience;
             LevelUp();
-            nextLevelExperience = Math.Pow(level, 2);
+            nextLevelExperience = GetExperienceNeededForLevel(baseExpReq, baseExpGrowth, level);
         }
+    }
+
+    private float GetExperienceNeededForLevel(float baseExpReq, float baseExpGrowth, int level)
+    {
+        return baseExpReq * (float)Math.Pow(baseExpGrowth, level);
     }
 
     public void LevelUp()
@@ -84,6 +96,7 @@ public abstract class Unit : MonoBehaviour
         Debug.Log($"{gameObject.name} has been destroyed!");
 
         // Destroy the GameObject
+        // gameObject.tag = "Untagged";
         Destroy(gameObject);
     }
 }
@@ -91,15 +104,18 @@ public abstract class Unit : MonoBehaviour
 public class Monster : Unit
 {
 
-    private Rigidbody rb;
+    protected Rigidbody rb;
     private Transform player;  // Reference to the player's transform
-    private Animator animator;
+    protected Animator animator;
     private AudioSource audioSource;
 
     private bool canAttack = true;  // Flag to track if the unit can attack
     private float attackCooldown = 2.67f;  // Cooldown period in seconds
     private float timeSinceLastAttack = 0f;  // Time elapsed since the last attack
 
+    private float wanderCooldown = 3.0f; // Cooldown period for wandering
+    private float timeSinceLastWander = 0.0f; // Time elapsed since the last wander
+    private Vector3 randomDirection;
 
 
     void Start()
@@ -122,54 +138,76 @@ public class Monster : Unit
 
     void FixedUpdate()
     {
-        // Check if the player is within a 10 units radius
-        if (player != null && Vector3.Distance(transform.position, player.position) <= 5.0f &&
-            Vector3.Distance(transform.position, player.position) >= 1.0f)
+        if (currentHitPoints <= 0)
         {
-            // Move towards the player
-            MoveTowardsPlayer();
-            animator.SetBool("IsRunning", true);
-            animator.SetBool("IsAttacking", false); // Ensure IsAttacking is set to false when moving
-        }
-        else if (player != null && Vector3.Distance(transform.position, player.position) < 2.0f)
-        {
-            // Stop moving by setting the velocity to zero
-            rb.velocity = Vector3.zero;
             animator.SetBool("IsRunning", false);
-
-            // Check if not already attacking and cooldown has expired
-            if (!animator.GetBool("IsAttacking") && canAttack)
-            {
-                // Set IsAttacking to true to trigger the attack animation
-                animator.SetBool("IsAttacking", true);
-
-                // Perform a normal attack on the player
-                // NormalAttack(player.GetComponent<Unit>());
-                Invoke("PlayHitSound", 1.0f);
-
-                // Set the cooldown timer
-                canAttack = false;
-                timeSinceLastAttack = 0f;
+            animator.SetBool("IsAttacking", false);
+            if (isDead == false) {
+                animator.SetTrigger("Dead");
+                Invoke("DestroyUnit", 3.0f);
+                isDead = true;
             }
+            rb.velocity = Vector3.zero;
         }
         else
         {
-            // Stop moving by setting the velocity to zero
-            rb.velocity = Vector3.zero;
-            animator.SetBool("IsRunning", false);
-            animator.SetBool("IsAttacking", false); // Ensure IsAttacking is set to false when not attacking
-        }
-
-        // Update the cooldown timer
-        if (!canAttack)
-        {
-            timeSinceLastAttack += Time.deltaTime;
-
-            // Check if the cooldown period has elapsed
-            if (timeSinceLastAttack >= attackCooldown)
+            // Check if the player is within a 10 units radius
+            if (player != null && Vector3.Distance(transform.position, player.position) <= 5.0f &&
+                Vector3.Distance(transform.position, player.position) >= 1.0f)
             {
-                canAttack = true;
-                animator.SetBool("IsAttacking", false);
+                // Move towards the player
+                MoveTowardsPlayer();
+                animator.SetBool("IsRunning", true);
+                animator.SetBool("IsAttacking", false); // Ensure IsAttacking is set to false when moving
+            }
+            else if (player != null && Vector3.Distance(transform.position, player.position) < 2.0f)
+            {
+                // Stop moving by setting the velocity to zero
+                rb.velocity = Vector3.zero;
+                animator.SetBool("IsRunning", false);
+
+                // Check if not already attacking and cooldown has expired
+                if (!animator.GetBool("IsAttacking") && canAttack)
+                {
+                    // Set IsAttacking to true to trigger the attack animation
+                    animator.SetBool("IsAttacking", true);
+
+                    // Perform a normal attack on the player
+                    // NormalAttack(player.GetComponent<Unit>());
+                    Invoke("PlayHitSound", 1.0f);
+
+                    // Set the cooldown timer
+                    canAttack = false;
+                    timeSinceLastAttack = 0f;
+                }
+            }
+            else
+            {
+                
+                if (Time.time - timeSinceLastWander >= wanderCooldown)
+                {
+                    randomDirection = UnityEngine.Random.insideUnitSphere * 10.0f;
+                    timeSinceLastWander = Time.time; // Reset the timer
+                }
+                else
+                {
+                    Wander(randomDirection);
+                }
+                // animator.SetBool("IsRunning", false);
+                animator.SetBool("IsAttacking", false); // Ensure IsAttacking is set to false when not attacking
+            }
+
+            // Update the cooldown timer
+            if (!canAttack)
+            {
+                timeSinceLastAttack += Time.deltaTime;
+
+                // Check if the cooldown period has elapsed
+                if (timeSinceLastAttack >= attackCooldown)
+                {
+                    canAttack = true;
+                    animator.SetBool("IsAttacking", false);
+                }
             }
         }
     }
@@ -179,6 +217,7 @@ public class Monster : Unit
     {
         // Calculate the direction to the player
         animator.SetBool("IsRunning", true);
+        
         Vector3 directionToPlayer = player.position - transform.position;
 
         // Normalize the direction to get a unit vector
@@ -194,6 +233,23 @@ public class Monster : Unit
         Quaternion targetRotation = Quaternion.LookRotation(directionToPlayer);
         rb.MoveRotation(targetRotation);
     }
+
+    protected virtual void Wander(Vector3 randomDirection)
+    {
+        animator.SetBool("IsRunning", true);
+        randomDirection.y = 0; // Keep the direction in the horizontal plane
+
+        // Calculate the target position to move towards in the random direction
+        Vector3 targetPosition = transform.position + randomDirection;
+
+        // Move the Monster towards the random direction
+        rb.MovePosition(Vector3.MoveTowards(transform.position, targetPosition, currentSpeed * Time.deltaTime));
+
+        // Rotate the Monster to face the random direction
+        Quaternion targetRotation = Quaternion.LookRotation(randomDirection);
+        rb.MoveRotation(Quaternion.RotateTowards(transform.rotation, targetRotation, 180.0f * Time.deltaTime));
+    }
+
 
     void PlayHitSound()
     {
@@ -225,6 +281,7 @@ public class Monster : Unit
 
 public class Hero : Unit
 {
+    public int coins = 0;
     public Equipment[] equippedItems = new Equipment[4];
     private bool isEquipped = false;
 

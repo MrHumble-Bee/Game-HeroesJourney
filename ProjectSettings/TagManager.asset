@@ -8,6 +8,8 @@ TagManager:
   - climbable
   - ground
   - monster
+  - portal
+  - loot
   layers:
   - Default
   - TransparentFX
