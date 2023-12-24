@@ -14,4 +14,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Rocky1.unity
     guid: 5ca5c40801b8c4cbc88acab52b0703cd
+  - enabled: 1
+    path: Assets/Scenes/Cloudy1.unity
+    guid: 96603c33289164185b49e25612928315
   m_configObjects: {}

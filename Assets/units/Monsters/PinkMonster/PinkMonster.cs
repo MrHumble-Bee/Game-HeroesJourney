@@ -19,21 +19,21 @@ public class PinkMonster : Monster
         }
         base.DestroyUnit();
     }
-
-    protected override void Wander(Vector3 randomDirection)
-    {
-        animator.SetBool("IsRunning", false);
-        randomDirection.y = 0; // Keep the direction in the horizontal plane
-
-        // Calculate the target position to move towards in the random direction
-        Vector3 targetPosition = transform.position + randomDirection;
-
-        // Move the Monster towards the random direction
-        rb.MovePosition(Vector3.MoveTowards(transform.position, targetPosition, currentSpeed / 3 * Time.deltaTime));
-
-        // Rotate the Monster to face the random direction
-        Quaternion targetRotation = Quaternion.LookRotation(randomDirection);
-        rb.MoveRotation(Quaternion.RotateTowards(transform.rotation, targetRotation, 180.0f * Time.deltaTime));
-
-    }
 }
+
+
+// public abstract class Unit
+// {
+//     protected abstract void DefenseScaling();
+// }
+// public abstract class Monster : Unit
+// {
+//     protected virtual void DefenseScaling()
+//     {
+//         // default implementation
+//     }
+// }
+// public class PinkMonster : Monster
+// {
+    
+// }

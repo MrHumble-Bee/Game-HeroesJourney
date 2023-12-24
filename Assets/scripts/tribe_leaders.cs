@@ -2,13 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TribeLeaders : Unit
+public class TribeLeaders : Hero
 {
     public Rigidbody rb;
     // Start is called before the first frame update
     void Start()
     {
-        RecoverAllStats();
+        // RecoverAllStats();
         rb = GetComponent<Rigidbody>();
         rb.constraints = RigidbodyConstraints.None; // Adjust as needed
         rb.freezeRotation = true;
@@ -18,19 +18,19 @@ public class TribeLeaders : Unit
 
     }
 
-    public override void AttackPointScaling()
+    protected override void AttackPointScaling()
     {
         maxAttackPoints = baseAttackPoints * level;
     }
-    public override void HitPointScaling()
+    protected override void HitPointScaling()
     {
         maxHitPoints = baseHitPoints * level;
     }
-    public override void DefenseScaling()
+    protected override void DefenseScaling()
     {
         maxDefense = baseDefense * level;
     }
-    public override void SpeedScaling()
+    protected override void SpeedScaling()
     {
         maxSpeed = baseSpeed * level;
     }

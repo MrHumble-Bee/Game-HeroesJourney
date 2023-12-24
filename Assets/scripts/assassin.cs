@@ -29,9 +29,10 @@ public class Assassin : Hero
 
     }
 
-    protected override void Update()
+    // protected override void Update()
+    protected void Update()
     {
-        base.Update();
+        // base.Update();
 
         if (Input.GetKey(KeyCode.C) && isClimbing)
         {
@@ -164,23 +165,6 @@ public class Assassin : Hero
     }
 
 
-
-    public override void AttackPointScaling()
-    {
-        maxAttackPoints = baseAttackPoints * level;
-    }
-    public override void HitPointScaling()
-    {
-        maxHitPoints = baseHitPoints * level;
-    }
-    public override void DefenseScaling()
-    {
-        maxDefense = baseDefense * level;
-    }
-    public override void SpeedScaling()
-    {
-        maxSpeed = baseSpeed;
-    }
 
     public void PlayRunningSound(bool shouldPlay)
     {
